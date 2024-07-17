@@ -1,0 +1,15 @@
+server:
+  port: 8222
+spring:
+  application:
+    name: gateway-service
+  cloud:
+    gateway:
+      discovery:
+        locator:
+          enabled: true
+      routes:
+        - id: core-service
+          uri: lb:http://CORE-SERVICE
+          predicates:
+            - Path=/api/v1/core/**

@@ -1,0 +1,14 @@
+server:
+  port: 8090
+spring:
+  kafka:
+    producer:
+      bootstrap-servers: localhost:9092
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      properties:
+        spring.json.type.mapping: orderConfirmation:com.ndambodevs.order.kafka.OrderConfirmation
+
+  application:
+    config:
+      core-url: http://localhost:8222/api/v1/core
