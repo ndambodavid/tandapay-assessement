@@ -1,17 +1,19 @@
-package com.tandapayinterview.core.mapper;
+package com.tandapayinterview.integration.mapper;
 
-import com.tandapayinterview.core.model.Payment;
-import com.tandapayinterview.core.request.PaymentRequest;
+import com.tandapayinterview.integration.model.PaymentRequest;
+import com.tandapayinterview.integration.request.PaymentRequestGw;
 import org.springframework.stereotype.Service;
 
 @Service
-public class PaymentMapper {
-    public Payment toPayment(PaymentRequest request) {
+public class PaymentRequestMapper {
+    public PaymentRequest toPaymentRequest(PaymentRequestGw request) {
         if (request == null) {
             return null;
         }
-        return Payment.builder()
+
+        return PaymentRequest.builder()
                 .id(request.id())
+                .paymentId(request.paymentId())
                 .reference(request.reference())
                 .amount(request.amount())
                 .mobileNumber(request.mobileNumber())
