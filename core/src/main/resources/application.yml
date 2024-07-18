@@ -12,6 +12,12 @@ spring:
       database: payments
       authentication-database: admin
   kafka:
+    producer:
+      bootstrap-servers: localhost:9092
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      properties:
+        spring.json.type.mapping: paymentRequest:com.tandapayinterview.core.kafka.PaymentRequest
     consumer:
       bootstrap-servers: localhost:9092
       group-id: paymentGroup
@@ -20,7 +26,4 @@ spring:
       value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
       properties:
         spring.json.trusted.packages: '*'
-        spring.json.type.mapping: orderConfirmation:com.ndambodevs.notification.model.OrderConfirmation,paymentConfirmation:com.ndambodevs.notification.model.PaymentConfirmation
-application:
-  config:
-    integration-url: http://localhost:8222/api/v1/integration
+        spring.json.type.mapping: payment:com.tandapayinterview.core.model.Payment

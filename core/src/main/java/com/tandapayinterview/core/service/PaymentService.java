@@ -5,6 +5,7 @@ import com.tandapayinterview.core.kafka.PaymentProducer;
 import com.tandapayinterview.core.model.Payment;
 import com.tandapayinterview.core.repository.PaymentRepository;
 import com.tandapayinterview.core.request.PaymentRequest;
+import com.tandapayinterview.core.response.GatewayResponse;
 import jakarta.ws.rs.NotFoundException;
 import lombok.RequiredArgsConstructor;
 
@@ -19,7 +20,7 @@ public class PaymentService {
     private final PaymentProducer paymentProducer;
 
     /**
-     * Add Payment request
+     * Add Payment
      * @param  request payment request
      * @return id of created payment
      */
@@ -40,24 +41,24 @@ public class PaymentService {
 
     /**
      * update payment information with information from integration service
-     * @param request payment request with information from integration service
+     * @param gatewayResponse payment response with information from integration service
      */
-    public void updatePayment(PaymentRequest request) {
-        var payment = this.paymentRepository.findById(request.id())
+    public void updatePayment(GatewayResponse gatewayResponse) {
+        var payment = this.paymentRepository.findById(gatewayResponse.getPaymentId())
                 .orElseThrow(() -> new NotFoundException(
-                        String.format("Cannot update payment:: No payment found with the provided ID: %s", request.id())
+                        String.format("Cannot update payment:: No payment found with the provided ID: %s", gatewayResponse.getPaymentId())
                 ));
-        mergePayment(payment, request);
+        mergePayment(payment, gatewayResponse);
         paymentRepository.save(payment);
     }
 
-    private void mergePayment(Payment payment, PaymentRequest paymentRequest) {
-        if (StringUtils.isNotBlank(paymentRequest.reference())) {
-            payment.setReference(paymentRequest.reference());
+    private void mergePayment(Payment payment, GatewayResponse gatewayResponse) {
+        if (StringUtils.isNotBlank(gatewayResponse.getReference())) {
+            payment.setReference(gatewayResponse.getReference());
         }
 
-        if (StringUtils.isNotBlank(paymentRequest.reference())) {
-            payment.setReference(paymentRequest.reference());
+        if (StringUtils.isNotBlank(gatewayResponse.getStatus())) {
+            payment.setStatus(gatewayResponse.getStatus());
         }
     }
 }

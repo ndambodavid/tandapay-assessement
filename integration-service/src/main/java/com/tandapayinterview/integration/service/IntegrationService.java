@@ -57,6 +57,7 @@ public class IntegrationService {
                 
                 // update payment request status
                 mergePaymentRequest(paymentRequest, response);
+                paymentRequestRepository.save(paymentRequest);
 
             }));
 
@@ -94,18 +95,21 @@ public class IntegrationService {
      */
     public void updatePayment(AsyncGwResponse asyncGwResponse) {
         // fetch payment request from log
-        var paymentRequets = this.paymentRequestRepository.findById(asyncGwResponse.getResult().getOriginatorConversationID())
+        var paymentRequest = this.paymentRequestRepository.findById(asyncGwResponse.getResult().getOriginatorConversationID())
                 .orElseThrow(() -> new NotFoundException(
-                        String.format("Cannot update payment:: No payment found with the provided ID: %s", request.id())
+                        String.format("Cannot update payment:: No payment found with the provided ID: %s", asyncGwResponse.getResult().getOriginatorConversationID())
                 ));
 
-        //TODO: update payment request resultDesc, status and reference
+        // update payment request resultDesc, status and reference
+        mergePaymentRequest(paymentRequest, asyncGwResponse);
+        paymentRequestRepository.save(paymentRequest);
 
-        //TODO: publish payment response message to gateway-response-topic
+        //TODO: publish payment response message to gateway-response-topic if gateway response is a success
 
-        //TODO: delete payment request instance if payment is success
-//        mergePayment(payment, request);
-//        paymentRepository.save(payment);
+        // delete payment request instance if payment is success
+        if (asyncGwResponse.getResult().getResultCode() == 0) {
+            paymentRequestRepository.deleteById(asyncGwResponse.getResult().getOriginatorConversationID());
+        }
     }
 
     /**
