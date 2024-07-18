@@ -6,9 +6,9 @@ import lombok.*;
 @Getter
 @Setter
 @Data
-@AllArgsConstructor
-@RequiredArgsConstructor
-@NoArgsConstructor
+//@AllArgsConstructor
+//@RequiredArgsConstructor
+//@NoArgsConstructor
 public class SyncGwResponse {
     @JsonProperty("ConversationID")
     private String conversationID;

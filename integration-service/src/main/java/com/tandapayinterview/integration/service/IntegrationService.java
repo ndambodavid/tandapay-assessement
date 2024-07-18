@@ -7,11 +7,10 @@ import com.tandapayinterview.integration.request.GatewayRequest;
 import com.tandapayinterview.integration.response.AsyncGwResponse;
 import com.tandapayinterview.integration.response.AuthResponse;
 import com.tandapayinterview.integration.response.SyncGwResponse;
+import io.micrometer.common.util.StringUtils;
 import jakarta.validation.constraints.NotNull;
-import jakarta.ws.rs.NotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang.StringUtils;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.scheduling.annotation.Async;
@@ -93,10 +92,10 @@ public class IntegrationService {
      * update payment Request information with information from Payment Gateway
      * @param asyncGwResponse gateway response with information from
      */
-    public void updatePayment(AsyncGwResponse asyncGwResponse) {
+    public void updatePayment(AsyncGwResponse asyncGwResponse) throws Exception {
         // fetch payment request from log
         var paymentRequest = this.paymentRequestRepository.findById(asyncGwResponse.getResult().getOriginatorConversationID())
-                .orElseThrow(() -> new NotFoundException(
+                .orElseThrow(() -> new Exception(
                         String.format("Cannot update payment:: No payment found with the provided ID: %s", asyncGwResponse.getResult().getOriginatorConversationID())
                 ));
 

@@ -1,6 +1,16 @@
 server:
   port: 8090
 spring:
+  application:
+    name: core-service
+  data:
+    mongodb:
+      username: david
+      password: david
+      host: localhost
+      port: 27017
+      database: paymentRequest
+      authentication-database: admin
   kafka:
     producer:
       bootstrap-servers: localhost:9092

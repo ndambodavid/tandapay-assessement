@@ -19,7 +19,7 @@ public class GatewayResponseConsumer {
 
     // consume message from gateway-response-topic
     @KafkaListener(topics = "gateway-response-topic")
-    public void consumePaymentRequest(GatewayResponse gatewayResponse) {
+    public void consumePaymentRequest(GatewayResponse gatewayResponse) throws Exception {
         log.info(format("Consuming the message from gateway-response-topic Topic:: %s", gatewayResponse));
 
         // update payment log instance

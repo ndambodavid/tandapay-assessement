@@ -8,9 +8,10 @@ import java.util.List;
 @Data
 @Setter
 @Getter
-@AllArgsConstructor
-@RequiredArgsConstructor
-@NoArgsConstructor
+//@AllArgsConstructor
+//@RequiredArgsConstructor
+//@NoArgsConstructor
+@EqualsAndHashCode(callSuper=false)
 public class AsyncGwResponse extends SyncGwResponse {
 
     @JsonProperty("Result")

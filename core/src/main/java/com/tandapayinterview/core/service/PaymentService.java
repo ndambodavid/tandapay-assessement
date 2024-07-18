@@ -6,10 +6,9 @@ import com.tandapayinterview.core.model.Payment;
 import com.tandapayinterview.core.repository.PaymentRepository;
 import com.tandapayinterview.core.request.PaymentRequest;
 import com.tandapayinterview.core.response.GatewayResponse;
-import jakarta.ws.rs.NotFoundException;
+import io.micrometer.common.util.StringUtils;
 import lombok.RequiredArgsConstructor;
 
-import org.apache.commons.lang.StringUtils;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -43,9 +42,9 @@ public class PaymentService {
      * update payment information with information from integration service
      * @param gatewayResponse payment response with information from integration service
      */
-    public void updatePayment(GatewayResponse gatewayResponse) {
+    public void updatePayment(GatewayResponse gatewayResponse) throws Exception {
         var payment = this.paymentRepository.findById(gatewayResponse.getPaymentId())
-                .orElseThrow(() -> new NotFoundException(
+                .orElseThrow(() -> new Exception(
                         String.format("Cannot update payment:: No payment found with the provided ID: %s", gatewayResponse.getPaymentId())
                 ));
         mergePayment(payment, gatewayResponse);
