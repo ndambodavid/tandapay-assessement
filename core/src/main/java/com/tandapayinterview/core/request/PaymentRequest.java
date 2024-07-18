@@ -16,7 +16,7 @@ public record PaymentRequest(
         @Digits(integer = 6, fraction = 2, message = "Amount must be a valid decimal number with up to 6 integer digits and 2 fractional digits")
         Float amount,
         @Pattern(regexp = "^254\\d{9}$", message = "Phone number must start with 254 and contain exactly 12 characters")
-        @NotNull(message = "recipient mssdn must be provided")
+        @NotNull(message = "recipient mobileNumber must be provided")
         String mobileNumber,
         String status,
         String reference

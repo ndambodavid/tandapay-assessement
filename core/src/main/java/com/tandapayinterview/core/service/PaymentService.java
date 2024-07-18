@@ -1,5 +1,6 @@
 package com.tandapayinterview.core.service;
 
+import com.tandapayinterview.core.kafka.PaymentRequestPayload;
 import com.tandapayinterview.core.mapper.PaymentMapper;
 import com.tandapayinterview.core.kafka.PaymentProducer;
 import com.tandapayinterview.core.model.Payment;
@@ -29,7 +30,7 @@ public class PaymentService {
 
         // publish payment request message to payment-topic
         paymentProducer.sendPaymentRequest(
-                new com.tandapayinterview.core.kafka.PaymentRequest(
+                new PaymentRequestPayload(
                         payment.getId(),
                         payment.getAmount(),
                         payment.getMobileNumber()

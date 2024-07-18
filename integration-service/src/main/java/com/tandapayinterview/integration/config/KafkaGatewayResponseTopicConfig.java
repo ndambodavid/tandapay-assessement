@@ -7,9 +7,9 @@ import org.springframework.kafka.config.TopicBuilder;
 
 @Configuration
 public class KafkaGatewayResponseTopicConfig {
-    // payment topic builder for communicating with integration service
+    // response topic builder for communicating with core service
     @Bean
-    public NewTopic paymentTopic() {
+    public NewTopic responseTopic() {
         return TopicBuilder
                 .name("gateway-response-topic")
                 .build();

@@ -1,6 +1,5 @@
 package com.tandapayinterview.integration.kafka;
 
-import com.tandapayinterview.integration.mapper.PaymentRequestMapper;
 import com.tandapayinterview.integration.model.PaymentRequest;
 import com.tandapayinterview.integration.repository.PaymentRequestRepository;
 import com.tandapayinterview.integration.request.PaymentRequestGw;
@@ -19,17 +18,16 @@ public class PaymentRequestConsumer {
 
     private final IntegrationService integrationService;
     private final PaymentRequestRepository paymentRequestRepository;
-    private final PaymentRequestMapper paymentRequestMapper;
 
     @KafkaListener(topics = "payment-topic")
     public void consumePaymentRequest(PaymentRequestGw paymentRequestGw) {
-        log.info(format("Consuming the message from payment-topic Topic:: %s", paymentRequestGw));
+        log.info("Sending notification with body = < {} >", paymentRequestGw);
 
         // log payment request instance
         var paymentRequest = paymentRequestRepository.save(
                 PaymentRequest.builder()
                         .paymentId(paymentRequestGw.paymentId())
-                        .amount(paymentRequestGw.amount())
+                        .amount(paymentRequestGw.payableAmount())
                         .mobileNumber(paymentRequestGw.mobileNumber())
                         .status("pending")
                         .reference("")

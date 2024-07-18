@@ -2,7 +2,6 @@ package com.tandapayinterview.integration.service;
 
 import com.tandapayinterview.integration.kafka.CoreResponse;
 import com.tandapayinterview.integration.kafka.GatewayResponseProducer;
-import com.tandapayinterview.integration.mapper.PaymentRequestMapper;
 import com.tandapayinterview.integration.model.PaymentRequest;
 import com.tandapayinterview.integration.repository.PaymentRequestRepository;
 import com.tandapayinterview.integration.request.CheckTransactionStatusRequest;
@@ -10,7 +9,6 @@ import com.tandapayinterview.integration.request.GatewayRequest;
 import com.tandapayinterview.integration.response.AsyncGwResponse;
 import com.tandapayinterview.integration.response.AuthResponse;
 import com.tandapayinterview.integration.response.CheckTransactionStatusResponse;
-import com.tandapayinterview.integration.response.SyncGwResponse;
 import io.micrometer.common.util.StringUtils;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
@@ -35,10 +33,10 @@ public class IntegrationService {
     private final PaymentRequestRepository paymentRequestRepository;
     private final GatewayResponseProducer gatewayResponseProducer;
 
-    private final String consumerKey = "YOUR_CONSUMER_KEY";
-    private final String consumerSecret = "YOUR_CONSUMER_SECRET";
+    private final String consumerKey = "uhHoA1d6V0N718IZWthUBEhd1gwD6GiAuePAembL1xqJBbxI";
+    private final String consumerSecret = "bVPFr82qvN5GoSd7NXjCLTV4cpY63qJBVuaxj4pWqPiuoNz36TnhfgqFdRgX4m5u";
     private static final String securityCredential = "o3bz3tfnyOJ4vPBlHoxjwiBBVcCENwD+XMayuDgXE7zE38qhPCaD4/7/zJvTS5jWiuKFYGk4mLZGOZykNDxbV7+G30jNw9LC9F3b4gPIHRM5KIzmYgYoVB1pfahItMD66SxRhoUr4KKRW4sZg7Vz+naoLm4nNXBmCpASRY2hQJUzb5yIbI98xMRWrZpEHr8ubdVs4APGyBinEuteqYGNhEQetGWuyo/95CnE8W3A+MORPvvYJyQZuXm4JgGzPB/JtROQDHu1IU8bbUsJ3hWXyFOM8VCzlBo3wtMeyz+H2Kp0zEbae0OLjGpdo/nitZwpl615yloUaKxq+Sw4dFk1jQ==";
-    private static final String initiatorName = "testapi";
+    private static final String initiatorName = "linmik420@gmail.com";
 
     String authUrl = "https://sandbox.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials";
     String credentials = consumerKey + ":" + consumerSecret;

@@ -4,11 +4,11 @@ package com.tandapayinterview.core.kafka;
  * payload for payment request
  * @param paymentId
  * @param payableAmount
- * @param mssdn
+ * @param mobileNumber
  */
-public record PaymentRequest(
+public record PaymentRequestPayload(
         String paymentId,
         Float payableAmount,
-        String mssdn
+        String mobileNumber
 ) {
 }

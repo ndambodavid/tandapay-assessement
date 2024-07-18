@@ -12,12 +12,12 @@ public class PaymentRequestMapper {
         }
 
         return PaymentRequest.builder()
-                .id(request.id())
+//                .id(request.id())
                 .paymentId(request.paymentId())
-                .reference(request.reference())
-                .amount(request.amount())
+                .reference("")
+                .amount(request.payableAmount())
                 .mobileNumber(request.mobileNumber())
-                .status(request.status())
+                .status("")
                 .build();
     }
 }

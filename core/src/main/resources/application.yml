@@ -17,7 +17,7 @@ spring:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
       properties:
-        spring.json.type.mapping: paymentRequest:com.tandapayinterview.core.kafka.PaymentRequest
+        spring.json.type.mapping: paymentRequest:com.tandapayinterview.core.kafka.PaymentRequestPayload
     consumer:
       bootstrap-servers: localhost:9092
       group-id: paymentGroup

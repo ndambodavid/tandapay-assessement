@@ -13,16 +13,16 @@ import static org.springframework.kafka.support.KafkaHeaders.TOPIC;
 @RequiredArgsConstructor
 @Slf4j
 public class PaymentProducer {
-    private final KafkaTemplate<String, PaymentRequest> kafkaTemplate;
+    private final KafkaTemplate<String, PaymentRequestPayload> kafkaTemplate;
 
     /**
      * publish payment request to payment-topic
-     * @param paymentRequest
+     * @param paymentRequestPayload
      */
-    public void sendPaymentRequest(PaymentRequest paymentRequest) {
-        log.info("Sending Payment request to Integration service");
-        Message<PaymentRequest> message = MessageBuilder
-                .withPayload(paymentRequest)
+    public void sendPaymentRequest(PaymentRequestPayload paymentRequestPayload) {
+        log.info("Sending Payment request to Integration service = < {} >", paymentRequestPayload);
+        Message<PaymentRequestPayload> message = MessageBuilder
+                .withPayload(paymentRequestPayload)
                 .setHeader(TOPIC, "payment-topic")
                 .build();
 
