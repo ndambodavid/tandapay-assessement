@@ -1,11 +1,15 @@
 package com.tandapayinterview.integration.service;
 
+import com.tandapayinterview.integration.kafka.CoreResponse;
+import com.tandapayinterview.integration.kafka.GatewayResponseProducer;
 import com.tandapayinterview.integration.mapper.PaymentRequestMapper;
 import com.tandapayinterview.integration.model.PaymentRequest;
 import com.tandapayinterview.integration.repository.PaymentRequestRepository;
+import com.tandapayinterview.integration.request.CheckTransactionStatusRequest;
 import com.tandapayinterview.integration.request.GatewayRequest;
 import com.tandapayinterview.integration.response.AsyncGwResponse;
 import com.tandapayinterview.integration.response.AuthResponse;
+import com.tandapayinterview.integration.response.CheckTransactionStatusResponse;
 import com.tandapayinterview.integration.response.SyncGwResponse;
 import io.micrometer.common.util.StringUtils;
 import jakarta.validation.constraints.NotNull;
@@ -21,16 +25,20 @@ import reactor.core.publisher.Mono;
 import java.util.Base64;
 import java.util.Objects;
 
+import static java.lang.String.format;
+
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class IntegrationService {
 
     private final PaymentRequestRepository paymentRequestRepository;
-    private final PaymentRequestMapper paymentRequestMapper;
+    private final GatewayResponseProducer gatewayResponseProducer;
 
     private final String consumerKey = "YOUR_CONSUMER_KEY";
     private final String consumerSecret = "YOUR_CONSUMER_SECRET";
+    private static final String securityCredential = "o3bz3tfnyOJ4vPBlHoxjwiBBVcCENwD+XMayuDgXE7zE38qhPCaD4/7/zJvTS5jWiuKFYGk4mLZGOZykNDxbV7+G30jNw9LC9F3b4gPIHRM5KIzmYgYoVB1pfahItMD66SxRhoUr4KKRW4sZg7Vz+naoLm4nNXBmCpASRY2hQJUzb5yIbI98xMRWrZpEHr8ubdVs4APGyBinEuteqYGNhEQetGWuyo/95CnE8W3A+MORPvvYJyQZuXm4JgGzPB/JtROQDHu1IU8bbUsJ3hWXyFOM8VCzlBo3wtMeyz+H2Kp0zEbae0OLjGpdo/nitZwpl615yloUaKxq+Sw4dFk1jQ==";
+    private static final String initiatorName = "testapi";
 
     String authUrl = "https://sandbox.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials";
     String credentials = consumerKey + ":" + consumerSecret;
@@ -52,7 +60,7 @@ public class IntegrationService {
 
             // send b2c payment request
             sendPaymentRequest(accessToken, gatewayRequest).subscribe(( response -> {
-                System.out.println("Payment Response: " + response);
+                System.out.println("Payment Sync Response: " + response);
                 
                 // update payment request status
                 mergePaymentRequest(paymentRequest, response);
@@ -67,15 +75,40 @@ public class IntegrationService {
     }
 
     /**
+     * initiate check transaction status request to gateway
+     * @param paymentRequest payment request instance
+     */
+    @Async
+    public void sendCheckTransactionRequestToGw(PaymentRequest paymentRequest) {
+
+        try {
+            // get access token from daraja auth api
+            String accessToken = String.valueOf(getAccessToken());
+            System.out.println("Access Token: " + accessToken);
+
+            CheckTransactionStatusRequest checkTransactionStatusRequest = getCheckTransactionRequest(paymentRequest);
+
+            // send b2c payment request
+            sendTransactionStatusRequest(accessToken, checkTransactionStatusRequest).subscribe(( response -> {
+                System.out.println("Payment Sync Response: " + response);
+                log.info("Check Transaction Sync Response: ", response);
+            }));
+
+        } catch (Exception e) {
+            log.error(e.getMessage());
+        }
+
+    }
+
+    /**
      * build gateway request payload
      * @param paymentRequest payment request instance
      */
     private static @NotNull GatewayRequest getGatewayRequest(PaymentRequest paymentRequest) {
-        String securityCredential = "o3bz3tfnyOJ4vPBlHoxjwiBBVcCENwD+XMayuDgXE7zE38qhPCaD4/7/zJvTS5jWiuKFYGk4mLZGOZykNDxbV7+G30jNw9LC9F3b4gPIHRM5KIzmYgYoVB1pfahItMD66SxRhoUr4KKRW4sZg7Vz+naoLm4nNXBmCpASRY2hQJUzb5yIbI98xMRWrZpEHr8ubdVs4APGyBinEuteqYGNhEQetGWuyo/95CnE8W3A+MORPvvYJyQZuXm4JgGzPB/JtROQDHu1IU8bbUsJ3hWXyFOM8VCzlBo3wtMeyz+H2Kp0zEbae0OLjGpdo/nitZwpl615yloUaKxq+Sw4dFk1jQ==";
 
         return new GatewayRequest(
                 paymentRequest.getPaymentId(),
-                "testapi",
+                initiatorName,
                 securityCredential,
                 "PromotionPayment",
                 paymentRequest.getAmount().toString(),
@@ -89,26 +122,101 @@ public class IntegrationService {
     }
 
     /**
-     * update payment Request information with information from Payment Gateway
-     * @param asyncGwResponse gateway response with information from
+     * build check transaction request payload
+     * @param paymentRequest payment request instance
      */
-    public void updatePayment(AsyncGwResponse asyncGwResponse) throws Exception {
+    private static @NotNull CheckTransactionStatusRequest getCheckTransactionRequest(PaymentRequest paymentRequest) {
+
+        return new CheckTransactionStatusRequest(
+                paymentRequest.getPaymentId(),
+                initiatorName,
+                securityCredential,
+                "TransactionStatusQuery",
+                paymentRequest.getReference(),
+                "600996",
+                "4",
+                "ok",
+                "https://mydomain.com/b2c/queue",
+                "https://mydomain.com/b2c/result",
+                "Christmas"
+        );
+    }
+
+    /**
+     * update payment Request information with information from Payment Gateway and send gateway update to core
+     * @param asyncGwResponse gateway payment result response
+     */
+    public void handlePaymentRequestResponse(AsyncGwResponse asyncGwResponse) throws Exception {
         // fetch payment request from log
         var paymentRequest = this.paymentRequestRepository.findById(asyncGwResponse.getResult().getOriginatorConversationID())
                 .orElseThrow(() -> new Exception(
-                        String.format("Cannot update payment:: No payment found with the provided ID: %s", asyncGwResponse.getResult().getOriginatorConversationID())
+                        format("Cannot update payment:: No payment found with the provided ID: %s", asyncGwResponse.getResult().getOriginatorConversationID())
                 ));
 
         // update payment request resultDesc, status and reference
         mergePaymentRequest(paymentRequest, asyncGwResponse);
         paymentRequestRepository.save(paymentRequest);
 
-        //TODO: publish payment response message to gateway-response-topic if gateway response is a success
+        // publish payment response message to gateway-response-topic
+        if (asyncGwResponse.getResult().getResultCode() == 0) {
+            gatewayResponseProducer.sendGatewayResponseToCore(
+                    new CoreResponse(
+                            asyncGwResponse.getResult().getOriginatorConversationID(),
+                            asyncGwResponse.getResult().getTransactionID(),
+                            "success"
+                    )
+            );
+        }else {
+            gatewayResponseProducer.sendGatewayResponseToCore(
+                    new CoreResponse(
+                            asyncGwResponse.getResult().getOriginatorConversationID(),
+                            asyncGwResponse.getResult().getTransactionID(),
+                            "failed"
+                    )
+            );
+        }
 
         // delete payment request instance if payment is success
         if (asyncGwResponse.getResult().getResultCode() == 0) {
             paymentRequestRepository.deleteById(asyncGwResponse.getResult().getOriginatorConversationID());
         }
+    }
+
+    /**
+     * update payment Request information with information from Payment Gateway and send gateway update to core
+     * @param transactionStatusResponse gateway transaction status response
+     */
+    public void handleTransactionStatusResponse(CheckTransactionStatusResponse transactionStatusResponse) throws Exception {
+        // fetch payment request from log
+        var paymentRequest = this.paymentRequestRepository.findById(transactionStatusResponse.getResult().getOriginatorConversationID())
+                .orElseThrow(() -> new Exception(
+                        format("Cannot update payment:: No payment found with the provided ID: %s", transactionStatusResponse.getResult().getOriginatorConversationID())
+                ));
+
+        // update payment request resultDesc, status and reference
+
+        if (transactionStatusResponse.getResult().getResultType() == 0) {
+
+            // publish payment response message to gateway-response-topic
+            gatewayResponseProducer.sendGatewayResponseToCore(
+                    new CoreResponse(
+                            transactionStatusResponse.getResult().getOriginatorConversationID(),
+                            transactionStatusResponse.getResult().getTransactionID(),
+                            "success"
+                    )
+            );
+
+            // delete payment request instance
+            paymentRequestRepository.deleteById(transactionStatusResponse.getResult().getOriginatorConversationID());
+
+        } else {
+            // update log
+            paymentRequest.setResultDesc(transactionStatusResponse.getResult().getResultDesc());
+            paymentRequest.setReference(transactionStatusResponse.getResult().getTransactionID());
+
+            paymentRequestRepository.save(paymentRequest);
+        }
+
     }
 
     /**
@@ -193,5 +301,25 @@ public class IntegrationService {
                 .body(Mono.just(gatewayRequest), PaymentRequest.class)
                 .retrieve()
                 .bodyToMono(AsyncGwResponse.class);
+    }
+
+    /**
+     * submit check transaction status request to gateway
+     * @param accessToken daraja api access token
+     * @param checkTransactionStatusRequest daraja api transaction status request
+     */
+    public static Mono<CheckTransactionStatusResponse> sendTransactionStatusRequest(String accessToken, CheckTransactionStatusRequest checkTransactionStatusRequest) {
+        String paymentUrl = "https://sandbox.safaricom.co.ke/mpesa/transactionstatus/v1/query";
+
+        WebClient client = WebClient.builder()
+                .baseUrl(paymentUrl)
+                .defaultHeader(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken)
+                .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+                .build();
+
+        return client.post()
+                .body(Mono.just(checkTransactionStatusRequest), CheckTransactionStatusRequest.class)
+                .retrieve()
+                .bodyToMono(CheckTransactionStatusResponse.class);
     }
 }

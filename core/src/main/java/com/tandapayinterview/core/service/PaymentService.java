@@ -5,6 +5,7 @@ import com.tandapayinterview.core.kafka.PaymentProducer;
 import com.tandapayinterview.core.model.Payment;
 import com.tandapayinterview.core.repository.PaymentRepository;
 import com.tandapayinterview.core.request.PaymentRequest;
+import com.tandapayinterview.core.response.ApiResponse;
 import com.tandapayinterview.core.response.GatewayResponse;
 import io.micrometer.common.util.StringUtils;
 import lombok.RequiredArgsConstructor;
@@ -23,7 +24,7 @@ public class PaymentService {
      * @param  request payment request
      * @return id of created payment
      */
-    public String createPayment(PaymentRequest request) {
+    public ApiResponse createPayment(PaymentRequest request) {
         var payment = paymentRepository.save(paymentMapper.toPayment(request));
 
         // publish payment request message to payment-topic
@@ -35,7 +36,7 @@ public class PaymentService {
                 )
         );
 
-        return payment.getId();
+        return new ApiResponse("payment request submitted to integration service", payment.getId());
     }
 
     /**

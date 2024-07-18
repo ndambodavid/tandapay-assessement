@@ -1,7 +1,10 @@
 package com.tandapayinterview.integration.response;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.*;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.util.List;
 
@@ -9,27 +12,26 @@ import java.util.List;
 @Setter
 @Getter
 @EqualsAndHashCode(callSuper=false)
-public class AsyncGwResponse extends SyncGwResponse {
-
+public class CheckTransactionStatusResponse extends SyncGwResponse{
     @JsonProperty("Result")
-    private Result result;
+    private AsyncGwResponse.Result result;
 
     @Data
     public static class Result {
-        @JsonProperty("ResultType")
-        private int resultType;
+        @JsonProperty("ConversationID")
+        private String conversationId;
+
+        @JsonProperty("OriginatorConversationID")
+        private int originatorConversationID;
 
         @JsonProperty("ResultCode")
-        private int resultCode;
+        private String resultCode;
 
         @JsonProperty("ResultDesc")
         private String resultDesc;
 
-        @JsonProperty("OriginatorConversationID")
-        private String originatorConversationID;
-
-        @JsonProperty("ConversationID")
-        private String conversationID;
+        @JsonProperty("ResultType")
+        private int resultType;
 
         @JsonProperty("TransactionID")
         private String transactionID;
@@ -53,7 +55,7 @@ public class AsyncGwResponse extends SyncGwResponse {
         private String key;
 
         @JsonProperty("Value")
-        private Object value;
+        private String value;
     }
 
     @Data
@@ -66,8 +68,5 @@ public class AsyncGwResponse extends SyncGwResponse {
     public static class ReferenceItem {
         @JsonProperty("Key")
         private String key;
-
-        @JsonProperty("Value")
-        private String value;
     }
 }
