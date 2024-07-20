@@ -1,7 +1,7 @@
 package com.tandapayinterview.integration.service;
 
-import com.tandapayinterview.integration.kafka.CoreResponse;
-import com.tandapayinterview.integration.kafka.GatewayResponseProducer;
+import com.tandapayinterview.integration.kafka.CoreResponsePayload;
+import com.tandapayinterview.integration.kafka.CoreResponseProducer;
 import com.tandapayinterview.integration.model.PaymentRequest;
 import com.tandapayinterview.integration.repository.PaymentRequestRepository;
 import com.tandapayinterview.integration.request.CheckTransactionStatusRequest;
@@ -31,7 +31,7 @@ import static java.lang.String.format;
 public class IntegrationService {
 
     private final PaymentRequestRepository paymentRequestRepository;
-    private final GatewayResponseProducer gatewayResponseProducer;
+    private final CoreResponseProducer coreResponseProducer;
 
     private final String consumerKey = "uhHoA1d6V0N718IZWthUBEhd1gwD6GiAuePAembL1xqJBbxI";
     private final String consumerSecret = "bVPFr82qvN5GoSd7NXjCLTV4cpY63qJBVuaxj4pWqPiuoNz36TnhfgqFdRgX4m5u";
@@ -51,20 +51,23 @@ public class IntegrationService {
 
         try {
             // get access token from daraja auth api
-            String accessToken = String.valueOf(getAccessToken());
-            System.out.println("Access Token: " + accessToken);
+            getAccessToken().subscribe(accessToken -> {
+                System.out.println("Access Token: " + accessToken);
 
-            GatewayRequest gatewayRequest = getGatewayRequest(paymentRequest);
+                // build gateway request
+                GatewayRequest gatewayRequest = getGatewayRequest(paymentRequest);
 
-            // send b2c payment request
-            sendPaymentRequest(accessToken, gatewayRequest).subscribe(( response -> {
-                System.out.println("Payment Sync Response: " + response);
-                
-                // update payment request status
-                mergePaymentRequest(paymentRequest, response);
-                paymentRequestRepository.save(paymentRequest);
+                // send b2c payment request
+                sendPaymentRequest(accessToken, gatewayRequest).subscribe(( response -> {
+                    System.out.println("Payment Sync Response: " + response);
 
-            }));
+                    // update payment request status
+                    mergePaymentRequest(paymentRequest, response);
+                    paymentRequestRepository.save(paymentRequest);
+
+                }));
+            });
+
 
         } catch (Exception e) {
             log.error(e.getMessage());
@@ -81,16 +84,18 @@ public class IntegrationService {
 
         try {
             // get access token from daraja auth api
-            String accessToken = String.valueOf(getAccessToken());
-            System.out.println("Access Token: " + accessToken);
+            getAccessToken().subscribe(accessToken -> {
+                System.out.println("Access Token: " + accessToken);
 
-            CheckTransactionStatusRequest checkTransactionStatusRequest = getCheckTransactionRequest(paymentRequest);
+                CheckTransactionStatusRequest checkTransactionStatusRequest = getCheckTransactionRequest(paymentRequest);
 
-            // send b2c payment request
-            sendTransactionStatusRequest(accessToken, checkTransactionStatusRequest).subscribe(( response -> {
-                System.out.println("Payment Sync Response: " + response);
-                log.info("Check Transaction Sync Response: ", response);
-            }));
+                // send b2c payment request
+                sendTransactionStatusRequest(accessToken, checkTransactionStatusRequest).subscribe(( response -> {
+                    System.out.println("Payment Sync Response: " + response);
+                    log.info("Check Transaction Sync Response= < {} >", response);
+                }));
+
+            });
 
         } catch (Exception e) {
             log.error(e.getMessage());
@@ -157,16 +162,16 @@ public class IntegrationService {
 
         // publish payment response message to gateway-response-topic
         if (asyncGwResponse.getResult().getResultCode() == 0) {
-            gatewayResponseProducer.sendGatewayResponseToCore(
-                    new CoreResponse(
+            coreResponseProducer.sendGatewayResponseToCore(
+                    new CoreResponsePayload(
                             asyncGwResponse.getResult().getOriginatorConversationID(),
                             asyncGwResponse.getResult().getTransactionID(),
                             "success"
                     )
             );
         }else {
-            gatewayResponseProducer.sendGatewayResponseToCore(
-                    new CoreResponse(
+            coreResponseProducer.sendGatewayResponseToCore(
+                    new CoreResponsePayload(
                             asyncGwResponse.getResult().getOriginatorConversationID(),
                             asyncGwResponse.getResult().getTransactionID(),
                             "failed"
@@ -196,8 +201,8 @@ public class IntegrationService {
         if (transactionStatusResponse.getResult().getResultType() == 0) {
 
             // publish payment response message to gateway-response-topic
-            gatewayResponseProducer.sendGatewayResponseToCore(
-                    new CoreResponse(
+            coreResponseProducer.sendGatewayResponseToCore(
+                    new CoreResponsePayload(
                             transactionStatusResponse.getResult().getOriginatorConversationID(),
                             transactionStatusResponse.getResult().getTransactionID(),
                             "success"
@@ -278,7 +283,7 @@ public class IntegrationService {
         return client.get()
                 .retrieve()
                 .bodyToMono(AuthResponse.class)
-                .map(AuthResponse::getAccess_token);
+                .map(AuthResponse::getAccessToken);
     }
 
     /**

@@ -1,7 +1,6 @@
 package com.tandapayinterview.core.response;
 
 import lombok.AllArgsConstructor;
-import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -9,7 +8,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @AllArgsConstructor
-public class GatewayResponse {
+public class GatewayResponsePayload {
     private String paymentId;
     private String reference;
     private String status;

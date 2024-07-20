@@ -1,13 +1,6 @@
 package com.tandapayinterview.integration.request;
 
-import jakarta.validation.constraints.DecimalMin;
-import jakarta.validation.constraints.Digits;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Pattern;
-
-import java.util.Currency;
-
-public record PaymentRequestGw(
+public record PaymentRequestPayload(
 
 //        String id,
 //        @NotNull(message = "paymentId must be provided")

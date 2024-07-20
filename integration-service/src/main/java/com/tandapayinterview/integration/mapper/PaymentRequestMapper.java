@@ -1,12 +1,12 @@
 package com.tandapayinterview.integration.mapper;
 
 import com.tandapayinterview.integration.model.PaymentRequest;
-import com.tandapayinterview.integration.request.PaymentRequestGw;
+import com.tandapayinterview.integration.request.PaymentRequestPayload;
 import org.springframework.stereotype.Service;
 
 @Service
 public class PaymentRequestMapper {
-    public PaymentRequest toPaymentRequest(PaymentRequestGw request) {
+    public PaymentRequest toPaymentRequest(PaymentRequestPayload request) {
         if (request == null) {
             return null;
         }

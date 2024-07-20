@@ -9,7 +9,7 @@ spring:
       password: david
       host: localhost
       port: 27017
-      database: responseGroup
+      database: payment-request
       authentication-database: admin
   kafka:
     producer:
@@ -18,12 +18,4 @@ spring:
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
       properties:
         spring.json.type.mapping: coreResponse:com.tandapayinterview.integration.kafka.CoreResponse
-    consumer:
-      bootstrap-servers: localhost:9092
-      group-id: paymentGroup
-      auto-offset-reset: earliest
-      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
-      properties:
-        spring.json.trusted.packages: '*'
-        spring.json.type.mapping: paymentPayload:com.tandapayinterview.integration.request.PaymentRequestGw
+

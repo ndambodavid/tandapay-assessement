@@ -6,7 +6,7 @@ package com.tandapayinterview.integration.kafka;
  * @param reference
  * @param status
  */
-public record CoreResponse(
+public record CoreResponsePayload(
         String paymentId,
         String reference,
         String status

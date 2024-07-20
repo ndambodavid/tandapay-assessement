@@ -10,5 +10,7 @@ import lombok.Setter;
 @Setter
 public class AuthResponse {
     @JsonProperty("access_token")
-    private String access_token;
+    private String accessToken;
+    @JsonProperty("expires_in")
+    private String expiry;
 }
