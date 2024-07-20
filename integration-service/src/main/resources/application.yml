@@ -11,11 +11,4 @@ spring:
       port: 27017
       database: payment-request
       authentication-database: admin
-  kafka:
-    producer:
-      bootstrap-servers: localhost:9092
-      key-serializer: org.apache.kafka.common.serialization.StringSerializer
-      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
-      properties:
-        spring.json.type.mapping: coreResponse:com.tandapayinterview.integration.kafka.CoreResponse
 

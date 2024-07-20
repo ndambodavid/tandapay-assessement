@@ -80,12 +80,9 @@ public class IntegrationService {
      * @param paymentRequest payment request instance
      */
     @Async
-    public void sendCheckTransactionRequestToGw(PaymentRequest paymentRequest) {
+    public void sendCheckTransactionRequestToGw(PaymentRequest paymentRequest, String accessToken) {
 
         try {
-            // get access token from daraja auth api
-            getAccessToken().subscribe(accessToken -> {
-                System.out.println("Access Token: " + accessToken);
 
                 CheckTransactionStatusRequest checkTransactionStatusRequest = getCheckTransactionRequest(paymentRequest);
 
@@ -94,8 +91,6 @@ public class IntegrationService {
                     System.out.println("Payment Sync Response: " + response);
                     log.info("Check Transaction Sync Response= < {} >", response);
                 }));
-
-            });
 
         } catch (Exception e) {
             log.error(e.getMessage());
@@ -270,7 +265,7 @@ public class IntegrationService {
     /**
      * get access token from daraja api
      */
-    private Mono<String> getAccessToken() {
+    public Mono<String> getAccessToken() {
 
         var encodedCredentials = Base64.getEncoder().encodeToString(credentials.getBytes());
 
