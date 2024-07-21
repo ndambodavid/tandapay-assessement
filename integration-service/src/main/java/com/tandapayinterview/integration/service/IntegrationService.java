@@ -13,6 +13,8 @@ import io.micrometer.common.util.StringUtils;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.env.Environment;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.scheduling.annotation.Async;
@@ -33,10 +35,26 @@ public class IntegrationService {
     private final PaymentRequestRepository paymentRequestRepository;
     private final CoreResponseProducer coreResponseProducer;
 
-    private final String consumerKey = "uhHoA1d6V0N718IZWthUBEhd1gwD6GiAuePAembL1xqJBbxI";
-    private final String consumerSecret = "bVPFr82qvN5GoSd7NXjCLTV4cpY63qJBVuaxj4pWqPiuoNz36TnhfgqFdRgX4m5u";
-    private static final String securityCredential = "o3bz3tfnyOJ4vPBlHoxjwiBBVcCENwD+XMayuDgXE7zE38qhPCaD4/7/zJvTS5jWiuKFYGk4mLZGOZykNDxbV7+G30jNw9LC9F3b4gPIHRM5KIzmYgYoVB1pfahItMD66SxRhoUr4KKRW4sZg7Vz+naoLm4nNXBmCpASRY2hQJUzb5yIbI98xMRWrZpEHr8ubdVs4APGyBinEuteqYGNhEQetGWuyo/95CnE8W3A+MORPvvYJyQZuXm4JgGzPB/JtROQDHu1IU8bbUsJ3hWXyFOM8VCzlBo3wtMeyz+H2Kp0zEbae0OLjGpdo/nitZwpl615yloUaKxq+Sw4dFk1jQ==";
-    private static final String initiatorName = "linmik420@gmail.com";
+
+//    private final String consumerKey = "uhHoA1d6V0N718IZWthUBEhd1gwD6GiAuePAembL1xqJBbxI";
+//    private final String consumerSecret = "bVPFr82qvN5GoSd7NXjCLTV4cpY63qJBVuaxj4pWqPiuoNz36TnhfgqFdRgX4m5u";
+//    private static final String securityCredential = "o3bz3tfnyOJ4vPBlHoxjwiBBVcCENwD+XMayuDgXE7zE38qhPCaD4/7/zJvTS5jWiuKFYGk4mLZGOZykNDxbV7+G30jNw9LC9F3b4gPIHRM5KIzmYgYoVB1pfahItMD66SxRhoUr4KKRW4sZg7Vz+naoLm4nNXBmCpASRY2hQJUzb5yIbI98xMRWrZpEHr8ubdVs4APGyBinEuteqYGNhEQetGWuyo/95CnE8W3A+MORPvvYJyQZuXm4JgGzPB/JtROQDHu1IU8bbUsJ3hWXyFOM8VCzlBo3wtMeyz+H2Kp0zEbae0OLjGpdo/nitZwpl615yloUaKxq+Sw4dFk1jQ==";
+//    private static final String initiatorName = "linmik420@gmail.com";
+
+
+//    private final String consumerKey = environment.getProperty("env.data.consumerKey");
+//    private final String consumerSecret = environment.getProperty("env.data.consumerSecret");
+//    private final String securityCredential = environment.getProperty("env.data.securityCredential");
+//    private final String initiatorName = environment.getProperty("env.data.initiatorName");
+
+    @Value("${env.consumerKey")
+    private String consumerKey;
+    @Value("${env.consumerSecret}")
+    private String consumerSecret;
+    @Value("${env.securityCredential}")
+    private String securityCredential;
+    @Value("${env.initiatorName}")
+    private String initiatorName;
 
     String authUrl = "https://sandbox.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials";
     String credentials = consumerKey + ":" + consumerSecret;
@@ -102,7 +120,7 @@ public class IntegrationService {
      * build gateway request payload
      * @param paymentRequest payment request instance
      */
-    private static @NotNull GatewayRequest getGatewayRequest(PaymentRequest paymentRequest) {
+    private @NotNull GatewayRequest getGatewayRequest(PaymentRequest paymentRequest) {
 
         return new GatewayRequest(
                 paymentRequest.getPaymentId(),
@@ -123,7 +141,7 @@ public class IntegrationService {
      * build check transaction request payload
      * @param paymentRequest payment request instance
      */
-    private static @NotNull CheckTransactionStatusRequest getCheckTransactionRequest(PaymentRequest paymentRequest) {
+    private @NotNull CheckTransactionStatusRequest getCheckTransactionRequest(PaymentRequest paymentRequest) {
 
         return new CheckTransactionStatusRequest(
                 paymentRequest.getPaymentId(),
@@ -146,7 +164,7 @@ public class IntegrationService {
      */
     public void handlePaymentRequestResponse(AsyncGwResponse asyncGwResponse) throws Exception {
         // fetch payment request from log
-        var paymentRequest = this.paymentRequestRepository.findById(asyncGwResponse.getResult().getOriginatorConversationID())
+        var paymentRequest = this.paymentRequestRepository.findByPaymentId(asyncGwResponse.getResult().getOriginatorConversationID())
                 .orElseThrow(() -> new Exception(
                         format("Cannot update payment:: No payment found with the provided ID: %s", asyncGwResponse.getResult().getOriginatorConversationID())
                 ));
@@ -186,7 +204,7 @@ public class IntegrationService {
      */
     public void handleTransactionStatusResponse(CheckTransactionStatusResponse transactionStatusResponse) throws Exception {
         // fetch payment request from log
-        var paymentRequest = this.paymentRequestRepository.findById(transactionStatusResponse.getResult().getOriginatorConversationID())
+        var paymentRequest = this.paymentRequestRepository.findByPaymentId(transactionStatusResponse.getResult().getOriginatorConversationID())
                 .orElseThrow(() -> new Exception(
                         format("Cannot update payment:: No payment found with the provided ID: %s", transactionStatusResponse.getResult().getOriginatorConversationID())
                 ));
