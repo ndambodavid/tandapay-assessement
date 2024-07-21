@@ -14,7 +14,6 @@ import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.env.Environment;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.scheduling.annotation.Async;
@@ -36,18 +35,7 @@ public class IntegrationService {
     private final CoreResponseProducer coreResponseProducer;
 
 
-//    private final String consumerKey = "uhHoA1d6V0N718IZWthUBEhd1gwD6GiAuePAembL1xqJBbxI";
-//    private final String consumerSecret = "bVPFr82qvN5GoSd7NXjCLTV4cpY63qJBVuaxj4pWqPiuoNz36TnhfgqFdRgX4m5u";
-//    private static final String securityCredential = "o3bz3tfnyOJ4vPBlHoxjwiBBVcCENwD+XMayuDgXE7zE38qhPCaD4/7/zJvTS5jWiuKFYGk4mLZGOZykNDxbV7+G30jNw9LC9F3b4gPIHRM5KIzmYgYoVB1pfahItMD66SxRhoUr4KKRW4sZg7Vz+naoLm4nNXBmCpASRY2hQJUzb5yIbI98xMRWrZpEHr8ubdVs4APGyBinEuteqYGNhEQetGWuyo/95CnE8W3A+MORPvvYJyQZuXm4JgGzPB/JtROQDHu1IU8bbUsJ3hWXyFOM8VCzlBo3wtMeyz+H2Kp0zEbae0OLjGpdo/nitZwpl615yloUaKxq+Sw4dFk1jQ==";
-//    private static final String initiatorName = "linmik420@gmail.com";
-
-
-//    private final String consumerKey = environment.getProperty("env.data.consumerKey");
-//    private final String consumerSecret = environment.getProperty("env.data.consumerSecret");
-//    private final String securityCredential = environment.getProperty("env.data.securityCredential");
-//    private final String initiatorName = environment.getProperty("env.data.initiatorName");
-
-    @Value("${env.consumerKey")
+    @Value("${env.consumerKey}")
     private String consumerKey;
     @Value("${env.consumerSecret}")
     private String consumerSecret;
@@ -55,6 +43,12 @@ public class IntegrationService {
     private String securityCredential;
     @Value("${env.initiatorName}")
     private String initiatorName;
+    @Value("${env.resultCallbackUrl}")
+    private String resultCallbackUrl;
+    @Value("${env.resultCallbackUrl}")
+    private String statusCallbackUrl;
+    @Value("${env.shortCode}")
+    private String shortCode;
 
     String authUrl = "https://sandbox.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials";
     String credentials = consumerKey + ":" + consumerSecret;
@@ -68,6 +62,7 @@ public class IntegrationService {
     public void sendPaymentRequestToGw(PaymentRequest paymentRequest) {
 
         try {
+
             // get access token from daraja auth api
             getAccessToken().subscribe(accessToken -> {
                 System.out.println("Access Token: " + accessToken);
@@ -128,11 +123,11 @@ public class IntegrationService {
                 securityCredential,
                 "PromotionPayment",
                 paymentRequest.getAmount().toString(),
-                "600996",
+                shortCode,
                 paymentRequest.getMobileNumber(),
                 "christmas bonus promo",
                 "https://mydomain.com/b2c/queue",
-                "https://mydomain.com/b2c/result",
+                resultCallbackUrl,
                 "Christmas"
         );
     }
@@ -149,11 +144,11 @@ public class IntegrationService {
                 securityCredential,
                 "TransactionStatusQuery",
                 paymentRequest.getReference(),
-                "600996",
+                shortCode,
                 "4",
                 "ok",
                 "https://mydomain.com/b2c/queue",
-                "https://mydomain.com/b2c/result",
+                statusCallbackUrl,
                 "Christmas"
         );
     }
@@ -284,6 +279,8 @@ public class IntegrationService {
      * get access token from daraja api
      */
     public Mono<String> getAccessToken() {
+
+        log.info("CREDENTIALS::::::::::::::::::: < {} >", credentials);
 
         var encodedCredentials = Base64.getEncoder().encodeToString(credentials.getBytes());
 
